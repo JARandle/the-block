@@ -1,11 +1,31 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useVehiclesContext } from "../context/VehiclesContext";
 import { useWatchlistContext } from "../context/WatchlistContext";
 import { VehicleCard } from "../components/VehicleCard";
 import { SkeletonCard } from "../components/SkeletonCard";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
-import { matchesSearch, sortVehicles, type SortKey } from "../lib/search";
+import {
+  buildVehicleFilterIndex,
+  filterAndSortInventory,
+} from "../lib/inventoryFilters";
+import type { SortKey } from "../lib/search";
 
+const selectClass =
+  "mt-1 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-950 px-4 text-base text-white focus:border-amber-500/60 focus:outline-none focus:ring-2 focus:ring-amber-400/40";
+
+/**
+ * Full-page vehicle inventory listing with search, filter, and sort controls.
+ *
+ * - Free-text search is debounced (200 ms) to avoid filtering on every
+ *   keystroke.
+ * - Dropdown filters are built from the actual inventory data via
+ *   {@link buildVehicleFilterIndex}; the Model dropdown is disabled until a
+ *   Make is selected.
+ * - When the Make filter changes the Model filter is automatically cleared if
+ *   the current model no longer belongs to the selected make.
+ * - Shows skeleton cards while the inventory is loading, and an empty-state
+ *   message when no vehicles match the active filters.
+ */
 export function InventoryPage() {
   const { mergedVehicles, loading, error } = useVehiclesContext();
   const { ids: watchlist } = useWatchlistContext();
@@ -13,13 +33,58 @@ export function InventoryPage() {
   const debouncedQuery = useDebouncedValue(query, 200);
   const [sort, setSort] = useState<SortKey>("auction_start");
   const [savedOnly, setSavedOnly] = useState(false);
+  const [yearFilter, setYearFilter] = useState<number | null>(null);
+  const [makeFilter, setMakeFilter] = useState<string | null>(null);
+  const [modelFilter, setModelFilter] = useState<string | null>(null);
 
-  const filtered = useMemo(() => {
-    let list = mergedVehicles;
-    if (savedOnly) list = list.filter((v) => watchlist.has(v.id));
-    const q = list.filter((v) => matchesSearch(v, debouncedQuery));
-    return sortVehicles(q, sort);
-  }, [mergedVehicles, debouncedQuery, sort, savedOnly, watchlist]);
+  const filterIndex = useMemo(
+    () => buildVehicleFilterIndex(mergedVehicles),
+    [mergedVehicles],
+  );
+  const { yearOptions, makeOptions, modelsForMake } = filterIndex;
+
+  const modelOptions = useMemo(
+    () =>
+      makeFilter === null ? [] : (modelsForMake.get(makeFilter) ?? []),
+    [makeFilter, modelsForMake],
+  );
+
+  useEffect(() => {
+    if (makeFilter === null) {
+      setModelFilter((prev) => (prev === null ? prev : null));
+      return;
+    }
+    const allowed = modelsForMake.get(makeFilter);
+    if (
+      modelFilter !== null &&
+      (!allowed || !allowed.includes(modelFilter))
+    ) {
+      setModelFilter(null);
+    }
+  }, [makeFilter, modelFilter, modelsForMake]);
+
+  const filtered = useMemo(
+    () =>
+      filterAndSortInventory(mergedVehicles, {
+        savedOnly,
+        isWatchlisted: (id) => watchlist.has(id),
+        year: yearFilter,
+        make: makeFilter,
+        model: modelFilter,
+        query: debouncedQuery,
+        sort,
+      }),
+    [
+      mergedVehicles,
+      debouncedQuery,
+      sort,
+      savedOnly,
+      watchlist,
+      yearFilter,
+      makeFilter,
+      modelFilter,
+    ],
+  );
 
   if (error) {
     return (
@@ -64,6 +129,74 @@ export function InventoryPage() {
         </div>
         <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-end">
           <div className="w-full sm:w-auto">
+            <label htmlFor="filter-year" className="block text-sm font-medium text-slate-300">
+              Year
+            </label>
+            <select
+              id="filter-year"
+              value={yearFilter === null ? "" : String(yearFilter)}
+              onChange={(e) => {
+                const v = e.target.value;
+                setYearFilter(v === "" ? null : Number(v));
+              }}
+              className={`${selectClass} sm:min-w-[140px]`}
+            >
+              <option value="">Any year</option>
+              {yearOptions.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="w-full sm:w-auto">
+            <label htmlFor="filter-make" className="block text-sm font-medium text-slate-300">
+              Make
+            </label>
+            <select
+              id="filter-make"
+              value={makeFilter ?? ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                setMakeFilter(v === "" ? null : v);
+                setModelFilter(null);
+              }}
+              className={`${selectClass} sm:min-w-[180px]`}
+            >
+              <option value="">Any make</option>
+              {makeOptions.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="w-full sm:w-auto">
+            <label htmlFor="filter-model" className="block text-sm font-medium text-slate-300">
+              Model
+              {makeFilter === null ? (
+                <span className="ml-1 font-normal text-slate-500">(select a make)</span>
+              ) : null}
+            </label>
+            <select
+              id="filter-model"
+              value={modelFilter ?? ""}
+              disabled={makeFilter === null}
+              onChange={(e) => {
+                const v = e.target.value;
+                setModelFilter(v === "" ? null : v);
+              }}
+              className={`${selectClass} enabled:hover:border-slate-600 disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-[180px]`}
+            >
+              <option value="">Any model</option>
+              {modelOptions.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="w-full sm:w-auto">
             <label htmlFor="sort" className="block text-sm font-medium text-slate-300">
               Sort
             </label>
@@ -71,7 +204,7 @@ export function InventoryPage() {
               id="sort"
               value={sort}
               onChange={(e) => setSort(e.target.value as SortKey)}
-              className="mt-1 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-950 px-4 text-base text-white focus:border-amber-500/60 focus:outline-none focus:ring-2 focus:ring-amber-400/40 sm:min-w-[200px]"
+              className={`${selectClass} sm:min-w-[200px]`}
             >
               <option value="auction_start">Auction start (soonest)</option>
               <option value="current_bid_desc">Current bid (high to low)</option>
@@ -95,7 +228,11 @@ export function InventoryPage() {
       </div>
 
       {loading ? (
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+          className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+          aria-label="Loading vehicle inventory"
+          aria-busy="true"
+        >
           {Array.from({ length: 6 }).map((_, i) => (
             <SkeletonCard key={i} />
           ))}
@@ -106,13 +243,17 @@ export function InventoryPage() {
         </p>
       ) : (
         <>
-          <p className="mt-6 text-sm text-slate-500">
+          <p
+            className="mt-6 text-sm text-slate-500"
+            aria-live="polite"
+            aria-atomic="true"
+          >
             Showing {filtered.length} of {mergedVehicles.length} vehicles
           </p>
           <ul className="mt-6 grid list-none gap-6 p-0 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((v) => (
+            {filtered.map((v, i) => (
               <li key={v.id}>
-                <VehicleCard vehicle={v} />
+                <VehicleCard vehicle={v} priority={i < 3} />
               </li>
             ))}
           </ul>

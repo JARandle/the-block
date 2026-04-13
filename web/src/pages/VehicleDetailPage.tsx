@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useVehiclesContext } from "../context/VehiclesContext";
 import { useWatchlistContext } from "../context/WatchlistContext";
@@ -5,11 +6,33 @@ import { ImageGallery } from "../components/ImageGallery";
 import { BidPanel } from "../components/BidPanel";
 import { formatCurrency, formatDateTime, auctionCountdownLabel } from "../lib/format";
 
+/**
+ * Detail page for a single vehicle, accessed at `/vehicle/:id`.
+ *
+ * Renders the image gallery, full specifications, auction details, condition
+ * report, and the bid panel. The document title is updated to include the
+ * vehicle name while the page is mounted and restored on unmount.
+ *
+ * Handles three loading states:
+ * - Data fetch error → error alert with a back link.
+ * - Fetch complete but vehicle ID not found → "Not found" message.
+ * - Fetch in progress → brief loading indicator.
+ */
 export function VehicleDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { getVehicle, loading, error } = useVehiclesContext();
   const { has, toggle } = useWatchlistContext();
   const vehicle = id ? getVehicle(id) : undefined;
+
+  useEffect(() => {
+    if (!vehicle) return;
+    const vehicleTitle = `${vehicle.year} ${vehicle.make} ${vehicle.model} — The Block`;
+    const previous = document.title;
+    document.title = vehicleTitle;
+    return () => {
+      document.title = previous;
+    };
+  }, [vehicle]);
 
   if (error) {
     return (
@@ -194,6 +217,16 @@ export function VehicleDetailPage() {
   );
 }
 
+/**
+ * Renders a single specification row as a `<dt>` / `<dd>` pair inside a
+ * styled container. Intended for use within a `<dl>` grid on the vehicle
+ * detail page.
+ *
+ * @param k         - The specification label (e.g. "Engine").
+ * @param v         - The specification value (e.g. "2.5L 4-cylinder").
+ * @param className - Optional additional Tailwind classes applied to the
+ *                    wrapper element.
+ */
 function Spec({
   k,
   v,

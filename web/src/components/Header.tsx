@@ -1,5 +1,9 @@
 import { Link } from "react-router-dom";
 
+/**
+ * Sticky site-wide header containing the application logo/home link, a
+ * short tagline, and a navigation link back to the inventory listing.
+ */
 export function Header() {
   return (
     <header className="border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-md sticky top-0 z-40">

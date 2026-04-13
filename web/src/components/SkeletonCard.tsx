@@ -1,3 +1,8 @@
+/**
+ * Animated placeholder card shown in the inventory grid while vehicle data is
+ * loading. Mirrors the approximate layout of {@link VehicleCard} so the page
+ * does not shift when real content arrives.
+ */
 export function SkeletonCard() {
   return (
     <div

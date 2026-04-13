@@ -48,6 +48,38 @@ describe("matchesSearch", () => {
   it("empty query matches", () => {
     expect(matchesSearch(v({}), "  ")).toBe(true);
   });
+
+  it("returns false when query does not match any field", () => {
+    expect(matchesSearch(v({ make: "Honda", model: "Civic" }), "zzznotfound")).toBe(false);
+  });
+
+  it("matches model case-insensitively", () => {
+    expect(matchesSearch(v({ model: "Accord" }), "accord")).toBe(true);
+  });
+
+  it("matches lot number", () => {
+    expect(matchesSearch(v({ lot: "A-0042" }), "A-0042")).toBe(true);
+  });
+
+  it("matches city", () => {
+    expect(matchesSearch(v({ city: "Vancouver" }), "vancouver")).toBe(true);
+  });
+
+  it("matches year as string", () => {
+    expect(matchesSearch(v({ year: 2021 }), "2021")).toBe(true);
+  });
+
+  it("matches selling_dealership", () => {
+    expect(matchesSearch(v({ selling_dealership: "Sunrise Motors" }), "sunrise")).toBe(true);
+  });
+
+  it("matches body_style", () => {
+    expect(matchesSearch(v({ body_style: "Convertible" }), "convert")).toBe(true);
+  });
+
+  it("matches province", () => {
+    expect(matchesSearch(v({ province: "BC" }), "bc")).toBe(true);
+  });
 });
 
 describe("sortVehicles", () => {
@@ -56,5 +88,37 @@ describe("sortVehicles", () => {
     const b = v({ id: "b", current_bid: 500 });
     const out = sortVehicles([a, b], "current_bid_desc");
     expect(out.map((x) => x.id)).toEqual(["b", "a"]);
+  });
+
+  it("sorts by year desc", () => {
+    const a = v({ id: "a", year: 2019 });
+    const b = v({ id: "b", year: 2023 });
+    const c = v({ id: "c", year: 2021 });
+    const out = sortVehicles([a, b, c], "year_desc");
+    expect(out.map((x) => x.id)).toEqual(["b", "c", "a"]);
+  });
+
+  it("relevance sort preserves original order", () => {
+    const a = v({ id: "a" });
+    const b = v({ id: "b" });
+    const c = v({ id: "c" });
+    const out = sortVehicles([a, b, c], "relevance");
+    expect(out.map((x) => x.id)).toEqual(["a", "b", "c"]);
+  });
+
+  it("does not mutate the input array", () => {
+    const a = v({ id: "a", current_bid: 100 });
+    const b = v({ id: "b", current_bid: 500 });
+    const input = [a, b];
+    sortVehicles(input, "current_bid_desc");
+    expect(input.map((x) => x.id)).toEqual(["a", "b"]);
+  });
+
+  it("sorts by auction_start ascending", () => {
+    const a = v({ id: "a", auction_start: "2026-06-01T00:00:00" });
+    const b = v({ id: "b", auction_start: "2026-04-01T00:00:00" });
+    const c = v({ id: "c", auction_start: "2026-05-01T00:00:00" });
+    const out = sortVehicles([a, b, c], "auction_start");
+    expect(out.map((x) => x.id)).toEqual(["b", "c", "a"]);
   });
 });

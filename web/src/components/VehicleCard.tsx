@@ -1,9 +1,19 @@
 import { Link } from "react-router-dom";
 import type { Vehicle } from "../types/vehicle";
-import { auctionCountdownLabel, formatCurrency } from "../lib/format";
+import { auctionCountdownLabel, formatCurrency, formatDateTime } from "../lib/format";
 import { useWatchlistContext } from "../context/WatchlistContext";
 
-export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
+/**
+ * Summary card for a single vehicle, used in the inventory grid. Displays the
+ * thumbnail image, year/make/model, location, current bid, and auction
+ * countdown. Includes a toggle button for adding or removing the vehicle from
+ * the user's watchlist.
+ *
+ * @param vehicle  - The vehicle data to display.
+ * @param priority - When `true`, the thumbnail image is loaded eagerly and
+ *                   decoded synchronously (for above-the-fold cards).
+ */
+export function VehicleCard({ vehicle, priority = false }: { vehicle: Vehicle; priority?: boolean }) {
   const { has, toggle } = useWatchlistContext();
   const saved = has(vehicle.id);
   const thumb = vehicle.images[0];
@@ -18,9 +28,9 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
             {thumb ? (
               <img
                 src={thumb}
-                alt=""
-                loading="lazy"
-                decoding="async"
+                alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+                loading={priority ? "eager" : "lazy"}
+                decoding={priority ? "sync" : "async"}
                 className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
               />
             ) : (
@@ -69,7 +79,12 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
               {formatCurrency(vehicle.current_bid)}
             </p>
           </div>
-          <p className="text-xs text-slate-500">{auctionCountdownLabel(vehicle.auction_start)}</p>
+          <div className="text-right">
+            <p className="text-xs text-slate-400 tabular-nums">
+              {formatDateTime(vehicle.auction_start)}
+            </p>
+            <p className="text-xs text-slate-500">{auctionCountdownLabel(vehicle.auction_start)}</p>
+          </div>
         </div>
       </div>
     </article>

@@ -5,6 +5,19 @@ import { Header } from "./components/Header";
 import { InventoryPage } from "./pages/InventoryPage";
 import { VehicleDetailPage } from "./pages/VehicleDetailPage";
 
+/**
+ * Root application component. Sets up client-side routing via
+ * `BrowserRouter` and wraps the entire tree with the
+ * {@link VehiclesProvider} and {@link WatchlistProvider} context providers.
+ *
+ * Defined routes:
+ * - `/`              → {@link InventoryPage}
+ * - `/vehicle/:id`   → {@link VehicleDetailPage}
+ * - `*`              → redirects to `/`
+ *
+ * Also renders a keyboard-accessible "Skip to content" link for screen reader
+ * and keyboard users.
+ */
 export default function App() {
   return (
     <BrowserRouter>

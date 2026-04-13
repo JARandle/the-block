@@ -14,6 +14,11 @@ const STORAGE_KEY = "the-block-bid-overrides";
 
 type Overrides = Record<string, Pick<Vehicle, "current_bid" | "bid_count">>;
 
+/**
+ * Reads any locally-placed bid overrides from `localStorage` and returns them
+ * as a plain object keyed by vehicle ID. Returns an empty object if the key is
+ * absent or the stored value is malformed.
+ */
 function loadOverrides(): Overrides {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -25,6 +30,12 @@ function loadOverrides(): Overrides {
   }
 }
 
+/**
+ * Persists the current bid override map to `localStorage`. Any write errors
+ * (e.g. quota exceeded) are silently ignored.
+ *
+ * @param o - The overrides object to persist.
+ */
 function saveOverrides(o: Overrides) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(o));
@@ -33,6 +44,15 @@ function saveOverrides(o: Overrides) {
   }
 }
 
+/**
+ * Merges any locally-stored bid override for a vehicle onto its base record.
+ * If no override exists for the vehicle the base record is returned as-is.
+ *
+ * @param base      - The original vehicle record from the data source.
+ * @param overrides - The current map of locally-placed bid overrides.
+ * @returns The vehicle with `current_bid` and `bid_count` from the override
+ *          applied, or the unmodified base when no override is present.
+ */
 function mergeVehicle(base: Vehicle, overrides: Overrides): Vehicle {
   const o = overrides[base.id];
   if (!o) return base;
@@ -53,6 +73,14 @@ type VehiclesContextValue = {
 
 const VehiclesContext = createContext<VehiclesContextValue | null>(null);
 
+/**
+ * Context provider that fetches the vehicle inventory from `/vehicles.json`,
+ * merges any locally-stored bid overrides, and exposes the result along with
+ * bid-placement logic to the component tree.
+ *
+ * Wrap your component tree with this provider to make
+ * {@link useVehiclesContext} available to descendants.
+ */
 export function VehiclesProvider({ children }: { children: ReactNode }) {
   const [raw, setRaw] = useState<Vehicle[]>([]);
   const [overrides, setOverrides] = useState<Overrides>(() =>
@@ -135,6 +163,12 @@ export function VehiclesProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Returns the nearest {@link VehiclesContext} value. Must be called inside a
+ * component tree that is wrapped by {@link VehiclesProvider}.
+ *
+ * @throws {Error} If no `VehiclesProvider` ancestor is present.
+ */
 export function useVehiclesContext(): VehiclesContextValue {
   const ctx = useContext(VehiclesContext);
   if (!ctx) throw new Error("useVehiclesContext must be used within VehiclesProvider");

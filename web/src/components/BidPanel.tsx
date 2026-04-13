@@ -4,6 +4,16 @@ import { formatCurrency } from "../lib/format";
 import { nextMinimumBid } from "../lib/bid";
 import { useVehiclesContext } from "../context/VehiclesContext";
 
+/**
+ * Displays the current bid state for a vehicle and provides a form for the
+ * user to submit a new bid. The minimum valid bid amount is pre-filled and
+ * updated whenever the vehicle's bid state changes.
+ *
+ * Bid results are surfaced as inline success or error messages without
+ * navigating away from the page.
+ *
+ * @param vehicle - The vehicle (with up-to-date bid state) to bid on.
+ */
 export function BidPanel({ vehicle }: { vehicle: Vehicle }) {
   const { placeBid } = useVehiclesContext();
   const min = nextMinimumBid(vehicle);
@@ -24,6 +34,11 @@ export function BidPanel({ vehicle }: { vehicle: Vehicle }) {
 
   const amount = Number.parseFloat(value.replace(/,/g, ""));
 
+  /**
+   * Handles bid form submission. Prevents the default browser form action,
+   * delegates validation and state mutation to `placeBid`, then displays a
+   * contextual success or error message.
+   */
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMessage(null);
@@ -87,7 +102,7 @@ export function BidPanel({ vehicle }: { vehicle: Vehicle }) {
         </div>
         {message ? (
           <p
-            role="status"
+            role={message.type === "ok" ? "status" : "alert"}
             className={
               message.type === "ok" ? "text-sm text-emerald-400" : "text-sm text-red-400"
             }

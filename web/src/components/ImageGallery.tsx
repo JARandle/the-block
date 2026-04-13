@@ -5,6 +5,15 @@ type Props = {
   alt: string;
 };
 
+/**
+ * Displays a primary vehicle photo with an optional horizontally-scrollable
+ * thumbnail strip for switching between multiple images. When the image list
+ * is empty a placeholder message is shown instead.
+ *
+ * @param images - Ordered list of image URLs to display.
+ * @param alt    - Base alt text used for the active image; thumbnail buttons
+ *                 receive auto-generated aria-labels.
+ */
 export function ImageGallery({ images, alt }: Props) {
   const [active, setActive] = useState(0);
   const main = images[active] ?? images[0];
@@ -24,7 +33,7 @@ export function ImageGallery({ images, alt }: Props) {
           src={main}
           alt={images.length > 1 ? `${alt} — photo ${active + 1}` : alt}
           loading="eager"
-          decoding="async"
+          decoding="sync"
           className="aspect-[16/10] w-full object-cover"
         />
       </div>

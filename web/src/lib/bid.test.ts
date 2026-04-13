@@ -47,6 +47,19 @@ describe("nextMinimumBid", () => {
       nextMinimumBid(base({ starting_bid: 5000, current_bid: 12000, bid_count: 3 }))
     ).toBe(12100);
   });
+
+  it("uses starting_bid when it exceeds current_bid + increment", () => {
+    // starting_bid is higher than current_bid + BID_INCREMENT
+    expect(
+      nextMinimumBid(base({ starting_bid: 20000, current_bid: 5000, bid_count: 1 }))
+    ).toBe(20000);
+  });
+
+  it("returns current_bid + increment when current_bid exceeds starting_bid and bids exist", () => {
+    expect(
+      nextMinimumBid(base({ starting_bid: 5000, current_bid: 50000, bid_count: 10 }))
+    ).toBe(50100);
+  });
 });
 
 describe("validateBidAmount", () => {
@@ -60,6 +73,44 @@ describe("validateBidAmount", () => {
     const v = base({ starting_bid: 10000, current_bid: 10000, bid_count: 0 });
     expect(validateBidAmount(v, 10000).ok).toBe(true);
   });
+
+  it("accepts a value above minimum", () => {
+    const v = base({ starting_bid: 10000, current_bid: 10000, bid_count: 0 });
+    expect(validateBidAmount(v, 15000).ok).toBe(true);
+  });
+
+  it("rejects NaN", () => {
+    const v = base({});
+    const r = validateBidAmount(v, NaN);
+    expect(r.ok).toBe(false);
+  });
+
+  it("rejects Infinity", () => {
+    const v = base({});
+    const r = validateBidAmount(v, Infinity);
+    expect(r.ok).toBe(false);
+  });
+
+  it("rejects zero", () => {
+    const v = base({ starting_bid: 10000, current_bid: 10000, bid_count: 0 });
+    const r = validateBidAmount(v, 0);
+    expect(r.ok).toBe(false);
+  });
+
+  it("rejects a negative amount", () => {
+    const v = base({ starting_bid: 10000, current_bid: 10000, bid_count: 0 });
+    const r = validateBidAmount(v, -500);
+    expect(r.ok).toBe(false);
+  });
+
+  it("includes the minimum amount in the error message when below min", () => {
+    const v = base({ starting_bid: 10000, current_bid: 10000, bid_count: 0 });
+    const r = validateBidAmount(v, 1);
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.message).toMatch(/10,000/);
+    }
+  });
 });
 
 describe("applySuccessfulBid", () => {
@@ -68,5 +119,20 @@ describe("applySuccessfulBid", () => {
     const n = applySuccessfulBid(v, 10500);
     expect(n.current_bid).toBe(10500);
     expect(n.bid_count).toBe(3);
+  });
+
+  it("does not mutate the original vehicle", () => {
+    const v = base({ current_bid: 10000, bid_count: 2 });
+    applySuccessfulBid(v, 10500);
+    expect(v.current_bid).toBe(10000);
+    expect(v.bid_count).toBe(2);
+  });
+
+  it("preserves all other vehicle fields unchanged", () => {
+    const v = base({ current_bid: 10000, bid_count: 2 });
+    const n = applySuccessfulBid(v, 10500);
+    expect(n.id).toBe(v.id);
+    expect(n.make).toBe(v.make);
+    expect(n.starting_bid).toBe(v.starting_bid);
   });
 });

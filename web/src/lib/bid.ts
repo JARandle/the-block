@@ -11,6 +11,14 @@ export function nextMinimumBid(vehicle: Vehicle): number {
   return Math.max(vehicle.starting_bid, beatHigh);
 }
 
+/**
+ * Validates a proposed bid amount against the current vehicle state.
+ *
+ * @param vehicle - The vehicle (with current bid state) being bid on.
+ * @param amount  - The proposed bid amount in CAD.
+ * @returns `{ ok: true }` when the bid is acceptable, or
+ *          `{ ok: false, message }` with a user-facing error string.
+ */
 export function validateBidAmount(
   vehicle: Vehicle,
   amount: number
@@ -28,6 +36,15 @@ export function validateBidAmount(
   return { ok: true };
 }
 
+/**
+ * Returns a new vehicle object with the bid state updated to reflect a
+ * successfully placed bid. The original vehicle object is not mutated.
+ *
+ * @param vehicle - The vehicle before the bid was placed.
+ * @param amount  - The winning bid amount in CAD.
+ * @returns A shallow copy of the vehicle with `current_bid` and
+ *          `bid_count` updated.
+ */
 export function applySuccessfulBid(vehicle: Vehicle, amount: number): Vehicle {
   return {
     ...vehicle,
