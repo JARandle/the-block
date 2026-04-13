@@ -18,6 +18,34 @@ Build the **buyer side of a vehicle auction platform as a web application**. We'
 
 A buyer should be able to browse inventory, inspect vehicle details, and place bids. That's the core experience. How you structure the product and how far you take it is up to you.
 
+## Run the prototype locally
+
+The buyer UI lives in [`web/`](web/).
+
+1. Install [Node.js](https://nodejs.org/) **18+** (16+ may work; the repo was verified with Vite 4 and Vitest on Node 14.18+).
+2. From the repo root:
+
+   ```bash
+   cd web
+   npm install
+   npm run dev
+   ```
+
+3. Open the URL shown in the terminal (typically [http://localhost:5173](http://localhost:5173)).
+
+**Production build:** `npm run build` then `npm run preview` (from `web/`).
+
+**Tests:** `npm run test` (Vitest unit tests, from `web/`).
+
+**End-to-end:** after `npx playwright install chromium` (from `web/`), run `npm run test:e2e`. Playwright starts the dev server automatically via config.
+
+### Implementation notes
+
+- **Data:** The app loads [`web/public/vehicles.json`](web/public/vehicles.json) (a copy of [`data/vehicles.json`](data/vehicles.json)) so the production build can serve static assets without a custom server.
+- **Bids:** Updates to `current_bid` / `bid_count` are stored in **localStorage** (`the-block-bid-overrides`) in this browser only. Listings and detail views read the same merged state.
+- **Saved vehicles:** Optional shortlist is stored in localStorage (`the-block-watchlist`).
+- **Reserve:** Reserve price is displayed; “reserve met” is derived from current bid vs. reserve for demo clarity.
+
 ## Core Requirements
 
 - Browse and search the vehicle inventory
