@@ -120,11 +120,29 @@ export function VehiclesProvider({ children }: { children: ReactNode }) {
     return m;
   }, [mergedVehicles]);
 
+  /**
+   * Returns the merged vehicle record for the given ID, or `undefined` if no
+   * vehicle with that ID exists in the current inventory. Bid overrides are
+   * already applied to the returned record.
+   *
+   * @param id - The vehicle UUID to look up.
+   */
   const getVehicle = useCallback(
     (id: string) => byId.get(id),
     [byId]
   );
 
+  /**
+   * Attempts to place a bid on a vehicle. Validates the amount against the
+   * current bid state, and on success updates `current_bid` and `bid_count`
+   * both in React state and in `localStorage` so the bid survives a page
+   * reload.
+   *
+   * @param id     - The UUID of the vehicle to bid on.
+   * @param amount - The proposed bid amount in CAD.
+   * @returns `{ ok: true }` on success, or `{ ok: false, message }` with a
+   *          human-readable reason when validation fails.
+   */
   const placeBid = useCallback(
     (id: string, amount: number): { ok: true } | { ok: false; message: string } => {
       const base = raw.find((v) => v.id === id);

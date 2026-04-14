@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { auctionCountdownLabel, formatCurrency, formatDateTime } from "./format";
+import {
+  auctionCountdownLabel,
+  calcProfit,
+  calcProfitMargin,
+  formatCurrency,
+  formatDateTime,
+  profitColour,
+  STRONG_MARGIN_THRESHOLD,
+} from "./format";
 
 describe("formatCurrency", () => {
   it("formats a typical amount in CAD", () => {
@@ -29,6 +37,117 @@ describe("formatDateTime", () => {
   it("includes the year in the output", () => {
     const result = formatDateTime("2026-05-01T12:00:00");
     expect(result).toContain("2026");
+  });
+});
+
+describe("calcProfit", () => {
+  it("returns null when marketPrice is null", () => {
+    expect(calcProfit(null, 10_000)).toBeNull();
+  });
+
+  it("returns positive profit when bid is below market price", () => {
+    expect(calcProfit(20_000, 10_000)).toBe(10_000);
+  });
+
+  it("returns negative profit when bid exceeds market price", () => {
+    expect(calcProfit(10_000, 20_000)).toBe(-10_000);
+  });
+
+  it("returns zero when bid equals market price (break-even)", () => {
+    expect(calcProfit(15_000, 15_000)).toBe(0);
+  });
+
+  it("returns the full market price when current bid is zero", () => {
+    expect(calcProfit(25_000, 0)).toBe(25_000);
+  });
+
+  it("handles a market price of zero with a zero bid", () => {
+    expect(calcProfit(0, 0)).toBe(0);
+  });
+
+  it("handles a market price of zero with a non-zero bid", () => {
+    expect(calcProfit(0, 5_000)).toBe(-5_000);
+  });
+
+  it("handles large numbers without precision loss", () => {
+    expect(calcProfit(200_000, 150_000)).toBe(50_000);
+  });
+});
+
+describe("calcProfitMargin", () => {
+  it("returns null when marketPrice is null", () => {
+    expect(calcProfitMargin(null, 10_000)).toBeNull();
+  });
+
+  it("returns null when marketPrice is zero (avoids division by zero)", () => {
+    expect(calcProfitMargin(0, 10_000)).toBeNull();
+  });
+
+  it("returns null when both marketPrice and bid are zero", () => {
+    expect(calcProfitMargin(0, 0)).toBeNull();
+  });
+
+  it("returns 0.5 when bid is exactly half the market price", () => {
+    expect(calcProfitMargin(20_000, 10_000)).toBe(0.5);
+  });
+
+  it("returns 0 at break-even (bid equals market price)", () => {
+    expect(calcProfitMargin(15_000, 15_000)).toBe(0);
+  });
+
+  it("returns negative margin when bid exceeds market price", () => {
+    expect(calcProfitMargin(10_000, 20_000)).toBe(-1);
+  });
+
+  it("returns 1 when bid is zero (entire market price is profit)", () => {
+    expect(calcProfitMargin(10_000, 0)).toBe(1);
+  });
+
+  it("returns a fractional margin matching (market - bid) / market", () => {
+    // bid = 17 000, market = 20 000 → margin = 3000/20000 = 0.15
+    expect(calcProfitMargin(20_000, 17_000)).toBeCloseTo(0.15);
+  });
+
+  it("handles very small margins without floating-point catastrophe", () => {
+    // bid = 19 999, market = 20 000 → margin ≈ 0.00005
+    const margin = calcProfitMargin(20_000, 19_999);
+    expect(margin).not.toBeNull();
+    expect(margin!).toBeGreaterThan(0);
+    expect(margin!).toBeLessThan(0.001);
+  });
+});
+
+describe("profitColour", () => {
+  it("returns muted class when margin is null", () => {
+    expect(profitColour(null)).toBe("text-slate-400");
+  });
+
+  it("returns green at exactly the strong-margin threshold", () => {
+    expect(profitColour(STRONG_MARGIN_THRESHOLD)).toBe("text-emerald-400");
+  });
+
+  it("returns green above the strong-margin threshold", () => {
+    expect(profitColour(0.5)).toBe("text-emerald-400");
+    expect(profitColour(1)).toBe("text-emerald-400");
+  });
+
+  it("returns amber just below the strong-margin threshold", () => {
+    expect(profitColour(STRONG_MARGIN_THRESHOLD - 0.001)).toBe("text-amber-300");
+  });
+
+  it("returns amber for any small positive margin", () => {
+    expect(profitColour(0.01)).toBe("text-amber-300");
+    expect(profitColour(0.14)).toBe("text-amber-300");
+  });
+
+  it("returns red at break-even (margin is zero)", () => {
+    expect(profitColour(0)).toBe("text-red-400");
+  });
+
+  it("returns red when bid exceeds market price (negative margin)", () => {
+    expect(profitColour(-0.01)).toBe("text-red-400");
+    expect(profitColour(-1)).toBe("text-red-400");
+    expect(profitColour(-100)).toBe("text-red-400");
   });
 });
 

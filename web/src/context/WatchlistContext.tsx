@@ -66,6 +66,13 @@ export function WatchlistProvider({ children }: { children: ReactNode }) {
     saveIds(ids);
   }, [ids]);
 
+  /**
+   * Adds the vehicle ID to the watchlist if it is not currently saved, or
+   * removes it if it is. The updated set is automatically persisted to
+   * `localStorage` via the effect above.
+   *
+   * @param id - The vehicle UUID to add or remove.
+   */
   const toggle = useCallback((id: string) => {
     setIds((prev) => {
       const next = new Set(prev);
@@ -75,6 +82,11 @@ export function WatchlistProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  /**
+   * Returns `true` if the given vehicle ID is currently in the watchlist.
+   *
+   * @param id - The vehicle UUID to check.
+   */
   const has = useCallback((id: string) => ids.has(id), [ids]);
 
   const value = useMemo(

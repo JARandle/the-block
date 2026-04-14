@@ -12,6 +12,13 @@ import type { SortKey } from "../lib/search";
 
 const PAGE_SIZE = 12;
 
+/**
+ * Number of skeleton cards shown while the inventory is loading. Half of
+ * PAGE_SIZE fills one row on mobile and part of the first page on larger
+ * screens, keeping the perceived layout stable without over-rendering.
+ */
+const SKELETON_COUNT = PAGE_SIZE / 2;
+
 const selectClass =
   "mt-1 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-950 px-4 text-base text-white focus:border-amber-500/60 focus:outline-none focus:ring-2 focus:ring-amber-400/40";
 
@@ -71,6 +78,12 @@ export function InventoryPage() {
     setVisibleCount(PAGE_SIZE);
   }, [debouncedQuery, sort, savedOnly, yearFilter, makeFilter, modelFilter]);
 
+  /**
+   * Increases the number of visible vehicles by {@link PAGE_SIZE} and returns
+   * keyboard focus to the "Load more" button on the next animation frame so
+   * keyboard and assistive-technology users maintain their position in the
+   * list without the page scrolling.
+   */
   const loadMore = useCallback(() => {
     setVisibleCount((n) => n + PAGE_SIZE);
     requestAnimationFrame(() => loadMoreRef.current?.focus({ preventScroll: true }));
@@ -86,6 +99,7 @@ export function InventoryPage() {
         model: modelFilter,
         query: debouncedQuery,
         sort,
+        searchBlobs: filterIndex.searchBlobs,
       }),
     [
       mergedVehicles,
@@ -96,6 +110,7 @@ export function InventoryPage() {
       yearFilter,
       makeFilter,
       modelFilter,
+      filterIndex.searchBlobs,
     ],
   );
 
@@ -137,7 +152,7 @@ export function InventoryPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             autoComplete="off"
-            className="mt-1 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-950 px-4 text-base text-white placeholder:text-slate-600 focus:border-amber-500/60 focus:outline-none focus:ring-2 focus:ring-amber-400/40"
+            className="mt-1 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-950 px-4 text-base text-white placeholder:text-slate-400 focus:border-amber-500/60 focus:outline-none focus:ring-2 focus:ring-amber-400/40"
           />
         </div>
         <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-end">
@@ -246,7 +261,7 @@ export function InventoryPage() {
           aria-label="Loading vehicle inventory"
           aria-busy="true"
         >
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
             <SkeletonCard key={i} />
           ))}
         </div>
@@ -257,7 +272,7 @@ export function InventoryPage() {
       ) : (
         <>
           <p
-            className="mt-6 text-sm text-slate-500"
+            className="mt-6 text-sm text-slate-400"
             aria-live="polite"
             aria-atomic="true"
           >

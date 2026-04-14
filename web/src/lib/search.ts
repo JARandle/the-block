@@ -4,10 +4,13 @@ import type { Vehicle } from "../types/vehicle";
  * Builds a single lowercase string from all searchable fields of a vehicle,
  * used for full-text substring matching.
  *
+ * Exported so callers can precompute and cache the blob once per vehicle
+ * rather than recomputing it on every search query.
+ *
  * @param v - The vehicle to index.
  * @returns A space-joined, lowercased string of all searchable field values.
  */
-function vehicleSearchBlob(v: Vehicle): string {
+export function vehicleSearchBlob(v: Vehicle): string {
   return [
     v.make,
     v.model,
@@ -25,6 +28,23 @@ function vehicleSearchBlob(v: Vehicle): string {
 }
 
 /**
+ * Returns true if a precomputed search blob contains the trimmed query as a
+ * substring (case-insensitive). An empty or whitespace-only query always
+ * matches.
+ *
+ * Prefer this over {@link matchesSearch} when you have a precomputed blob
+ * from {@link vehicleSearchBlob} to avoid rebuilding the string on every call.
+ *
+ * @param blob  - A precomputed lowercase search blob for the vehicle.
+ * @param query - The raw search string entered by the user.
+ */
+export function matchesBlob(blob: string, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  return blob.includes(q);
+}
+
+/**
  * Returns true if the vehicle's searchable text contains the trimmed query
  * as a substring (case-insensitive). An empty or whitespace-only query always
  * matches.
@@ -33,9 +53,7 @@ function vehicleSearchBlob(v: Vehicle): string {
  * @param query   - The raw search string entered by the user.
  */
 export function matchesSearch(vehicle: Vehicle, query: string): boolean {
-  const q = query.trim().toLowerCase();
-  if (!q) return true;
-  return vehicleSearchBlob(vehicle).includes(q);
+  return matchesBlob(vehicleSearchBlob(vehicle), query);
 }
 
 export type SortKey = "relevance" | "current_bid_desc" | "year_desc" | "auction_start";

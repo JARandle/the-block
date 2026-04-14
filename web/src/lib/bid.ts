@@ -1,4 +1,5 @@
 import type { Vehicle } from "../types/vehicle";
+import { formatCurrency } from "./format";
 
 export const BID_INCREMENT = 100;
 
@@ -30,7 +31,7 @@ export function validateBidAmount(
   if (amount < min) {
     return {
       ok: false,
-      message: `Bid must be at least ${min.toLocaleString("en-CA")} CAD.`,
+      message: `Bid must be at least ${formatCurrency(min)}.`,
     };
   }
   return { ok: true };

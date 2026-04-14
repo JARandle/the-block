@@ -14,7 +14,7 @@ export function Header() {
         >
           The Block
         </Link>
-        <p className="hidden text-sm text-slate-400 sm:block">
+        <p className="hidden text-sm text-slate-300 sm:block">
           Buyer auctions — browse, inspect, bid
         </p>
         <Link

@@ -27,19 +27,28 @@ export function VehicleDetailPage() {
   useEffect(() => {
     if (!vehicle) return;
     const vehicleTitle = `${vehicle.year} ${vehicle.make} ${vehicle.model} — The Block`;
-    const previous = document.title;
+    const description =
+      `${vehicle.year} ${vehicle.make} ${vehicle.model} ${vehicle.trim} — ` +
+      `view specs, condition report, and place your bid on The Block.`;
+
+    const prevTitle = document.title;
+    const metaDesc = document.querySelector('meta[name="description"]');
+    const prevDesc = metaDesc?.getAttribute("content") ?? null;
+
     document.title = vehicleTitle;
+    metaDesc?.setAttribute("content", description);
+
     return () => {
-      document.title = previous;
+      document.title = prevTitle;
+      if (prevDesc !== null) metaDesc?.setAttribute("content", prevDesc);
     };
   }, [vehicle]);
 
   if (error) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-        <p className="text-red-300" role="alert">
-          {error}
-        </p>
+      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6" role="alert">
+        <h1 className="font-display text-2xl font-semibold text-white">Could not load vehicle</h1>
+        <p className="mt-2 text-red-300">{error}</p>
         <Link to="/" className="mt-4 inline-block text-amber-400 hover:underline">
           Back to inventory
         </Link>
@@ -65,7 +74,7 @@ export function VehicleDetailPage() {
   if (!vehicle) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-        <p className="text-slate-400">Loading…</p>
+        <p role="status" className="text-slate-400">Loading…</p>
       </div>
     );
   }

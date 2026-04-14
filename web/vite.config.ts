@@ -38,6 +38,35 @@ function fontPreloadPlugin(): Plugin {
 
 export default defineConfig({
   plugins: [react(), fontPreloadPlugin()],
+  server: {
+    proxy: {
+      /**
+       * Proxy all `/api/marketcheck/*` requests through the Vite dev server to
+       * the Marketcheck API origin. This sidesteps the browser's CORS policy,
+       * which blocks direct fetch() calls to third-party origins, and keeps the
+       * API key out of the browser's Network tab since the forwarded request is
+       * made server-side by Node.
+       *
+       * In production a real server-side proxy (e.g. an Express middleware or
+       * serverless function) would be needed in place of this Vite-only config.
+       */
+      "/api/marketcheck": {
+        target: "https://api.marketcheck.com",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/marketcheck/, ""),
+      },
+      /**
+       * Proxy Frankfurter exchange rate requests through the dev server to
+       * avoid CORS restrictions on the direct cross-origin fetch from the
+       * browser. No API key is required — this is purely an origin bypass.
+       */
+      "/api/frankfurter": {
+        target: "https://api.frankfurter.app",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/frankfurter/, ""),
+      },
+    },
+  },
   build: {
     rollupOptions: {
       output: {
