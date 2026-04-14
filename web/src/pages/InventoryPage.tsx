@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useVehiclesContext } from "../context/VehiclesContext";
 import { useWatchlistContext } from "../context/WatchlistContext";
 import { VehicleCard } from "../components/VehicleCard";
@@ -9,6 +9,8 @@ import {
   filterAndSortInventory,
 } from "../lib/inventoryFilters";
 import type { SortKey } from "../lib/search";
+
+const PAGE_SIZE = 12;
 
 const selectClass =
   "mt-1 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-950 px-4 text-base text-white focus:border-amber-500/60 focus:outline-none focus:ring-2 focus:ring-amber-400/40";
@@ -36,6 +38,8 @@ export function InventoryPage() {
   const [yearFilter, setYearFilter] = useState<number | null>(null);
   const [makeFilter, setMakeFilter] = useState<string | null>(null);
   const [modelFilter, setModelFilter] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const loadMoreRef = useRef<HTMLButtonElement>(null);
 
   const filterIndex = useMemo(
     () => buildVehicleFilterIndex(mergedVehicles),
@@ -62,6 +66,15 @@ export function InventoryPage() {
       setModelFilter(null);
     }
   }, [makeFilter, modelFilter, modelsForMake]);
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [debouncedQuery, sort, savedOnly, yearFilter, makeFilter, modelFilter]);
+
+  const loadMore = useCallback(() => {
+    setVisibleCount((n) => n + PAGE_SIZE);
+    requestAnimationFrame(() => loadMoreRef.current?.focus({ preventScroll: true }));
+  }, []);
 
   const filtered = useMemo(
     () =>
@@ -248,15 +261,27 @@ export function InventoryPage() {
             aria-live="polite"
             aria-atomic="true"
           >
-            Showing {filtered.length} of {mergedVehicles.length} vehicles
+            Showing {Math.min(visibleCount, filtered.length)} of {filtered.length} vehicle{filtered.length !== 1 ? "s" : ""}
           </p>
           <ul className="mt-6 grid list-none gap-6 p-0 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((v, i) => (
+            {filtered.slice(0, visibleCount).map((v, i) => (
               <li key={v.id}>
                 <VehicleCard vehicle={v} priority={i < 3} />
               </li>
             ))}
           </ul>
+          {visibleCount < filtered.length && (
+            <div className="mt-10 flex justify-center">
+              <button
+                ref={loadMoreRef}
+                type="button"
+                onClick={loadMore}
+                className="min-h-[48px] rounded-xl border border-slate-700 bg-slate-900 px-8 py-3 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60"
+              >
+                Load more ({filtered.length - visibleCount} remaining)
+              </button>
+            </div>
+          )}
         </>
       )}
     </div>

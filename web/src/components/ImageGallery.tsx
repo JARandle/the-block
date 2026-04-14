@@ -33,7 +33,10 @@ export function ImageGallery({ images, alt }: Props) {
           src={main}
           alt={images.length > 1 ? `${alt} — photo ${active + 1}` : alt}
           loading="eager"
-          decoding="sync"
+          decoding="async"
+          fetchPriority="high"
+          width={800}
+          height={500}
           className="aspect-[16/10] w-full object-cover"
         />
       </div>

@@ -30,7 +30,10 @@ export function VehicleCard({ vehicle, priority = false }: { vehicle: Vehicle; p
                 src={thumb}
                 alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
                 loading={priority ? "eager" : "lazy"}
-                decoding={priority ? "sync" : "async"}
+                decoding="async"
+                fetchPriority={priority ? "high" : "auto"}
+                width={800}
+                height={500}
                 className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
               />
             ) : (
