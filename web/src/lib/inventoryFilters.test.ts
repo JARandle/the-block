@@ -226,4 +226,27 @@ describe("filterAndSortInventory", () => {
     });
     expect(out).toEqual([]);
   });
+
+  it("applies savedOnly AND make filter together (AND logic)", () => {
+    // b is watchlisted but is Ford; a and c are Honda; only Honda vehicles in watchlist should match
+    const watch = new Set(["a", "b"]);
+    const out = filterAndSortInventory(list, {
+      ...defaultListParams,
+      savedOnly: true,
+      isWatchlisted: (id) => watch.has(id),
+      make: "Honda",
+    });
+    // only "a" is both watchlisted and Honda
+    expect(out.map((v) => v.id)).toEqual(["a"]);
+  });
+
+  it("applies model filter independently of make filter", () => {
+    // The UI always sets make before model, but the pipeline applies them independently.
+    // Filtering by model "Accord" without specifying make should still return vehicle c.
+    const out = filterAndSortInventory(list, {
+      ...defaultListParams,
+      model: "Accord",
+    });
+    expect(out.map((v) => v.id)).toEqual(["c"]);
+  });
 });

@@ -60,6 +60,18 @@ describe("nextMinimumBid", () => {
       nextMinimumBid(base({ starting_bid: 5000, current_bid: 50000, bid_count: 10 }))
     ).toBe(50100);
   });
+
+  it("returns starting_bid when bid_count is 0 and current_bid is below starting_bid", () => {
+    expect(
+      nextMinimumBid(base({ starting_bid: 5000, current_bid: 3000, bid_count: 0 }))
+    ).toBe(5000);
+  });
+
+  it("returns current_bid when bid_count is 0 and current_bid exceeds starting_bid", () => {
+    expect(
+      nextMinimumBid(base({ starting_bid: 5000, current_bid: 6000, bid_count: 0 }))
+    ).toBe(6000);
+  });
 });
 
 describe("validateBidAmount", () => {
@@ -111,6 +123,20 @@ describe("validateBidAmount", () => {
       expect(r.message).toMatch(/10,000/);
     }
   });
+
+  it("uses the 'Enter a valid bid amount' message for non-finite inputs", () => {
+    const v = base({});
+    const rNaN = validateBidAmount(v, NaN);
+    const rInf = validateBidAmount(v, Infinity);
+    const rZero = validateBidAmount(v, 0);
+    const rNeg = validateBidAmount(v, -1);
+    for (const r of [rNaN, rInf, rZero, rNeg]) {
+      expect(r.ok).toBe(false);
+      if (!r.ok) {
+        expect(r.message).toBe("Enter a valid bid amount.");
+      }
+    }
+  });
 });
 
 describe("applySuccessfulBid", () => {
@@ -134,5 +160,12 @@ describe("applySuccessfulBid", () => {
     expect(n.id).toBe(v.id);
     expect(n.make).toBe(v.make);
     expect(n.starting_bid).toBe(v.starting_bid);
+  });
+
+  it("increments bid_count from 0 to 1 for the first-ever bid", () => {
+    const v = base({ current_bid: 10000, bid_count: 0 });
+    const n = applySuccessfulBid(v, 10000);
+    expect(n.bid_count).toBe(1);
+    expect(n.current_bid).toBe(10000);
   });
 });

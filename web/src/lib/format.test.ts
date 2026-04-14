@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { auctionCountdownLabel, formatCurrency, formatDateTime } from "./format";
+import {
+  auctionCountdownLabel,
+  calcProfit,
+  calcProfitMargin,
+  formatCurrency,
+  formatDateTime,
+} from "./format";
 
 describe("formatCurrency", () => {
   it("formats a typical amount in CAD", () => {
@@ -17,6 +23,12 @@ describe("formatCurrency", () => {
   it("drops cents (minimumFractionDigits is 0)", () => {
     expect(formatCurrency(9999.99)).toBe("$10,000");
   });
+
+  it("formats a negative amount", () => {
+    const result = formatCurrency(-500);
+    expect(result).toContain("500");
+    expect(result).toMatch(/-/);
+  });
 });
 
 describe("formatDateTime", () => {
@@ -29,6 +41,12 @@ describe("formatDateTime", () => {
   it("includes the year in the output", () => {
     const result = formatDateTime("2026-05-01T12:00:00");
     expect(result).toContain("2026");
+  });
+
+  it("throws a RangeError for an invalid ISO string (no internal guard)", () => {
+    // Documents current behavior: the function does not guard against invalid
+    // dates — Intl.DateTimeFormat.format throws when given an Invalid Date.
+    expect(() => formatDateTime("not-a-date")).toThrow(RangeError);
   });
 });
 
@@ -84,5 +102,49 @@ describe("auctionCountdownLabel", () => {
     const now = new Date("2026-05-01T00:00:00Z");
     const start = new Date("2026-05-01T03:00:00Z").toISOString(); // exactly 3h
     expect(auctionCountdownLabel(start, now)).toBe("Starts in 3h 0m");
+  });
+});
+
+describe("calcProfit", () => {
+  it("returns null when buyNowPrice is null", () => {
+    expect(calcProfit(null, 10000)).toBeNull();
+  });
+
+  it("returns a numeric result when buyNowPrice is 0 (does not return null)", () => {
+    expect(calcProfit(0, 5000)).toBe(-5000);
+  });
+
+  it("returns positive profit when buyNowPrice exceeds currentBid", () => {
+    expect(calcProfit(20000, 15000)).toBe(5000);
+  });
+
+  it("returns negative profit when currentBid exceeds buyNowPrice", () => {
+    expect(calcProfit(10000, 12000)).toBe(-2000);
+  });
+
+  it("returns zero when buyNowPrice equals currentBid", () => {
+    expect(calcProfit(10000, 10000)).toBe(0);
+  });
+});
+
+describe("calcProfitMargin", () => {
+  it("returns null when buyNowPrice is null", () => {
+    expect(calcProfitMargin(null, 10000)).toBeNull();
+  });
+
+  it("returns null when buyNowPrice is 0 (division-by-zero guard)", () => {
+    expect(calcProfitMargin(0, 5000)).toBeNull();
+  });
+
+  it("returns a positive fraction when buyNowPrice exceeds currentBid", () => {
+    expect(calcProfitMargin(20000, 10000)).toBe(0.5);
+  });
+
+  it("returns a negative fraction when currentBid exceeds buyNowPrice", () => {
+    expect(calcProfitMargin(10000, 15000)).toBe(-0.5);
+  });
+
+  it("returns zero when buyNowPrice equals currentBid", () => {
+    expect(calcProfitMargin(10000, 10000)).toBe(0);
   });
 });

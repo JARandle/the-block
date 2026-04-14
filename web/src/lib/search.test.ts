@@ -80,6 +80,10 @@ describe("matchesSearch", () => {
   it("matches province", () => {
     expect(matchesSearch(v({ province: "BC" }), "bc")).toBe(true);
   });
+
+  it("empty string query matches every vehicle", () => {
+    expect(matchesSearch(v({}), "")).toBe(true);
+  });
 });
 
 describe("sortVehicles", () => {
@@ -120,5 +124,29 @@ describe("sortVehicles", () => {
     const c = v({ id: "c", auction_start: "2026-05-01T00:00:00" });
     const out = sortVehicles([a, b, c], "auction_start");
     expect(out.map((x) => x.id)).toEqual(["b", "c", "a"]);
+  });
+
+  it("sorts by current bid ascending", () => {
+    const a = v({ id: "a", current_bid: 500 });
+    const b = v({ id: "b", current_bid: 100 });
+    const c = v({ id: "c", current_bid: 300 });
+    const out = sortVehicles([a, b, c], "current_bid_asc");
+    expect(out.map((x) => x.id)).toEqual(["b", "c", "a"]);
+  });
+
+  it("preserves stable relative order for equal bids in current_bid_desc", () => {
+    const a = v({ id: "a", current_bid: 500 });
+    const b = v({ id: "b", current_bid: 500 });
+    const out = sortVehicles([a, b], "current_bid_desc");
+    expect(out.map((x) => x.id)).toEqual(["a", "b"]);
+  });
+
+  it("unknown sort key preserves original order", () => {
+    const a = v({ id: "a" });
+    const b = v({ id: "b" });
+    const c = v({ id: "c" });
+    // Cast to bypass TS — exercises the default branch in the switch
+    const out = sortVehicles([a, b, c], "unknown_key" as never);
+    expect(out.map((x) => x.id)).toEqual(["a", "b", "c"]);
   });
 });
