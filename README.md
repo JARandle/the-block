@@ -124,7 +124,11 @@ Decisions were made to keep the prototype simple, predictable, and easy to test 
 - **E2E (Playwright):** From `web/`, install browsers once with `npx playwright install chromium`, then `npm run test:e2e`. Config starts `npm run dev` automatically ([`web/playwright.config.cjs`](web/playwright.config.cjs)).
   - [`web/e2e/smoke.spec.mjs`](web/e2e/smoke.spec.mjs) — inventory loads, open a vehicle (detail + bid heading), search shows empty state then restores results.
   - Setting `CI=true` enables stricter Playwright behavior: `.only` is forbidden, retries increase to 2, and workers are limited to 1.
-
+- **Lighthouse Scores**
+  - Mobile 
+    - 95 Performance, 96 Accessibility, 100 Best Practices, 100 Search Engine Optimization (SEO)
+  - Desktop
+    - 100 Performance, 96 Accessibility, 100 Best Practices, 100 SEO
 ---
 
 ## What I'd Do With More Time
