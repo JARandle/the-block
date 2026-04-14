@@ -3,6 +3,7 @@ import { useVehiclesContext } from "../context/VehiclesContext";
 import { useWatchlistContext } from "../context/WatchlistContext";
 import { VehicleCard } from "../components/VehicleCard";
 import { SkeletonCard } from "../components/SkeletonCard";
+import { Select } from "../components/Select";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import {
   buildVehicleFilterIndex,
@@ -11,9 +12,6 @@ import {
 import type { SortKey } from "../lib/search";
 
 const PAGE_SIZE = 12;
-
-const selectClass =
-  "mt-1 min-h-[48px] w-full rounded-xl border border-slate-700 bg-slate-950 px-4 text-base text-white focus:border-amber-500/60 focus:outline-none focus:ring-2 focus:ring-amber-400/40";
 
 /**
  * Full-page vehicle inventory listing with search, filter, and sort controls.
@@ -54,15 +52,9 @@ export function InventoryPage() {
   );
 
   useEffect(() => {
-    if (makeFilter === null) {
-      setModelFilter((prev) => (prev === null ? prev : null));
-      return;
-    }
+    if (makeFilter === null) return;
     const allowed = modelsForMake.get(makeFilter);
-    if (
-      modelFilter !== null &&
-      (!allowed || !allowed.includes(modelFilter))
-    ) {
+    if (modelFilter !== null && (!allowed || !allowed.includes(modelFilter))) {
       setModelFilter(null);
     }
   }, [makeFilter, modelFilter, modelsForMake]);
@@ -145,14 +137,14 @@ export function InventoryPage() {
             <label htmlFor="filter-year" className="block text-sm font-medium text-slate-300">
               Year
             </label>
-            <select
+            <Select
               id="filter-year"
               value={yearFilter === null ? "" : String(yearFilter)}
               onChange={(e) => {
                 const v = e.target.value;
                 setYearFilter(v === "" ? null : Number(v));
               }}
-              className={`${selectClass} sm:min-w-[140px]`}
+              className="sm:min-w-[140px]"
             >
               <option value="">Any year</option>
               {yearOptions.map((y) => (
@@ -160,13 +152,13 @@ export function InventoryPage() {
                   {y}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <div className="w-full sm:w-auto">
             <label htmlFor="filter-make" className="block text-sm font-medium text-slate-300">
               Make
             </label>
-            <select
+            <Select
               id="filter-make"
               value={makeFilter ?? ""}
               onChange={(e) => {
@@ -174,7 +166,7 @@ export function InventoryPage() {
                 setMakeFilter(v === "" ? null : v);
                 setModelFilter(null);
               }}
-              className={`${selectClass} sm:min-w-[180px]`}
+              className="sm:min-w-[180px]"
             >
               <option value="">Any make</option>
               {makeOptions.map((m) => (
@@ -182,7 +174,7 @@ export function InventoryPage() {
                   {m}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <div className="w-full sm:w-auto">
             <label htmlFor="filter-model" className="block text-sm font-medium text-slate-300">
@@ -191,7 +183,7 @@ export function InventoryPage() {
                 <span className="ml-1 font-normal text-slate-500">(select a make)</span>
               ) : null}
             </label>
-            <select
+            <Select
               id="filter-model"
               value={modelFilter ?? ""}
               disabled={makeFilter === null}
@@ -199,7 +191,7 @@ export function InventoryPage() {
                 const v = e.target.value;
                 setModelFilter(v === "" ? null : v);
               }}
-              className={`${selectClass} enabled:hover:border-slate-600 disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-[180px]`}
+              className="enabled:hover:border-slate-600 disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-[180px]"
             >
               <option value="">Any model</option>
               {modelOptions.map((m) => (
@@ -207,23 +199,24 @@ export function InventoryPage() {
                   {m}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <div className="w-full sm:w-auto">
             <label htmlFor="sort" className="block text-sm font-medium text-slate-300">
               Sort
             </label>
-            <select
+            <Select
               id="sort"
               value={sort}
               onChange={(e) => setSort(e.target.value as SortKey)}
-              className={`${selectClass} sm:min-w-[200px]`}
+              className="sm:min-w-[200px]"
             >
               <option value="auction_start">Auction start (soonest)</option>
               <option value="current_bid_desc">Current bid (high to low)</option>
+              <option value="current_bid_asc">Current bid (low to high)</option>
               <option value="year_desc">Year (newest)</option>
               <option value="relevance">Listing order</option>
-            </select>
+            </Select>
           </div>
           <div className="flex min-h-[48px] items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-2 sm:py-0">
             <input

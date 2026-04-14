@@ -62,7 +62,7 @@ An auction buyer app with two main routes: inventory (`/`) and vehicle detail (`
 
 Inventory also exposes dropdown filters for Year, Make, and Model. The Make and Model filters are built dynamically from the loaded dataset via [`web/src/lib/inventoryFilters.ts`](web/src/lib/inventoryFilters.ts) (`buildVehicleFilterIndex`). The Model dropdown is disabled until a Make is selected and automatically clears if the chosen make no longer has the selected model. Results are loaded at 12 per page with a "Load more" button that shows the remaining count; any filter or sort change resets back to the first page.
 
-A potential profit for the buyer is also listed. This number is based off the difference in the buy now option and the current winning bid. Vehicles without a buy now option notify the buyer the information is not available.
+A potential profit for the buyer is also listed. This number is based off the difference in the buy now option and the current winning bid. Vehicles without a buy now option do not have this feature on their vehicle card.
 
 Inventory cards use skeleton placeholders while the JSON fetch is in flight, giving instant visual feedback on slow connections.
 

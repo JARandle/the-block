@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Vehicle } from "../types/vehicle";
 import { auctionCountdownLabel, calcProfit, calcProfitMargin, formatCurrency, formatDateTime } from "../lib/format";
@@ -42,22 +42,27 @@ export function VehicleCard({ vehicle, priority = false }: { vehicle: Vehicle; p
   const { has, toggle } = useWatchlistContext();
   const saved = has(vehicle.id);
   const thumb = vehicle.images[0];
+  const profitPanelId = useId();
 
   const [showProfit, setShowProfit] = useState(false);
   const profit = calcProfit(vehicle.buy_now_price, vehicle.current_bid);
   const margin = calcProfitMargin(vehicle.buy_now_price, vehicle.current_bid);
+
   return (
-    <article className="group flex flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50 shadow-lg shadow-black/20 transition hover:border-slate-600 hover:bg-slate-900">
+    <article className="cv-auto group flex flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50 shadow-lg shadow-black/20 transition hover:border-slate-600 hover:bg-slate-900">
       <div className="relative">
+        {/* Image link is hidden from AT and keyboard — the title link below is the primary navigation target */}
         <Link
           to={`/vehicle/${vehicle.id}`}
-          className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/80 focus-visible:ring-inset rounded-t-2xl"
+          tabIndex={-1}
+          aria-hidden="true"
+          className="block rounded-t-2xl"
         >
           <div className="aspect-[16/10] overflow-hidden bg-slate-800">
             {thumb ? (
               <img
                 src={thumb}
-                alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+                alt=""
                 loading={priority ? "eager" : "lazy"}
                 decoding="async"
                 fetchPriority={priority ? "high" : "auto"}
@@ -126,14 +131,29 @@ export function VehicleCard({ vehicle, priority = false }: { vehicle: Vehicle; p
               onClick={() => setShowProfit((v) => !v)}
               className="self-start rounded-lg border border-slate-700 bg-slate-800/60 px-3 py-1 text-xs font-medium text-slate-300 transition hover:border-slate-500 hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60"
               aria-expanded={showProfit}
+              aria-controls={profitPanelId}
               aria-label={showProfit ? "Hide estimated profit" : "Show estimated profit"}
             >
-              {showProfit ? "Hide profit ▲" : "Est. profit ▼"}
+              {showProfit ? (
+                <>
+                  Hide profit{" "}
+                  <svg aria-hidden="true" className="inline-block h-3 w-3" viewBox="0 0 12 12" fill="currentColor">
+                    <path d="M6 4l4.5 4.5-1 1L6 6 2.5 9.5l-1-1z" />
+                  </svg>
+                </>
+              ) : (
+                <>
+                  Est. profit{" "}
+                  <svg aria-hidden="true" className="inline-block h-3 w-3" viewBox="0 0 12 12" fill="currentColor">
+                    <path d="M6 8L1.5 3.5l1-1L6 6l3.5-3.5 1 1z" />
+                  </svg>
+                </>
+              )}
             </button>
           )}
 
           {showProfit && profit != null && vehicle.buy_now_price != null && (
-            <div className="rounded-xl border border-slate-700 bg-slate-800/40 px-3 py-2 text-xs">
+            <div id={profitPanelId} className="rounded-xl border border-slate-700 bg-slate-800/40 px-3 py-2 text-xs">
               <div className="flex justify-between gap-4">
                 <span className="text-slate-400">Retail ask</span>
                 <span className="tabular-nums text-slate-200">{formatCurrency(vehicle.buy_now_price)}</span>

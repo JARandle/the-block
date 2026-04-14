@@ -38,13 +38,14 @@ export function matchesSearch(vehicle: Vehicle, query: string): boolean {
   return vehicleSearchBlob(vehicle).includes(q);
 }
 
-export type SortKey = "relevance" | "current_bid_desc" | "year_desc" | "auction_start";
+export type SortKey = "relevance" | "current_bid_desc" | "current_bid_asc" | "year_desc" | "auction_start";
 
 /**
  * Returns a new array containing the same vehicles sorted according to the
  * given key. The original array is not mutated.
  *
  * - `"current_bid_desc"` — highest current bid first.
+ * - `"current_bid_asc"`  — lowest current bid first.
  * - `"year_desc"`        — newest model year first.
  * - `"auction_start"`    — earliest auction start first.
  * - `"relevance"`        — preserves original listing order.
@@ -57,6 +58,9 @@ export function sortVehicles(list: Vehicle[], sort: SortKey): Vehicle[] {
   switch (sort) {
     case "current_bid_desc":
       out.sort((a, b) => b.current_bid - a.current_bid);
+      break;
+    case "current_bid_asc":
+      out.sort((a, b) => a.current_bid - b.current_bid);
       break;
     case "year_desc":
       out.sort((a, b) => b.year - a.year);

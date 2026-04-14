@@ -3,12 +3,23 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { VehiclesProvider } from "./context/VehiclesContext";
 import { WatchlistProvider } from "./context/WatchlistContext";
 import { Header } from "./components/Header";
+import { SkeletonCard } from "./components/SkeletonCard";
 
 const InventoryPage = lazy(() =>
   import("./pages/InventoryPage").then((m) => ({ default: m.InventoryPage }))
 );
 const VehicleDetailPage = lazy(() =>
   import("./pages/VehicleDetailPage").then((m) => ({ default: m.VehicleDetailPage }))
+);
+
+const suspenseFallback = (
+  <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+    <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <SkeletonCard key={i} />
+      ))}
+    </div>
+  </div>
 );
 
 /**
@@ -38,7 +49,7 @@ export default function App() {
           <div className="min-h-screen bg-slate-950 text-slate-200">
             <Header />
             <main id="main-content">
-              <Suspense>
+              <Suspense fallback={suspenseFallback}>
                 <Routes>
                   <Route path="/" element={<InventoryPage />} />
                   <Route path="/vehicle/:id" element={<VehicleDetailPage />} />
