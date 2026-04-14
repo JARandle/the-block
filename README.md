@@ -62,6 +62,8 @@ An auction buyer app with two main routes: inventory (`/`) and vehicle detail (`
 
 Inventory also exposes dropdown filters for Year, Make, and Model. The Make and Model filters are built dynamically from the loaded dataset via [`web/src/lib/inventoryFilters.ts`](web/src/lib/inventoryFilters.ts) (`buildVehicleFilterIndex`). The Model dropdown is disabled until a Make is selected and automatically clears if the chosen make no longer has the selected model. Results are loaded at 12 per page with a "Load more" button that shows the remaining count; any filter or sort change resets back to the first page.
 
+A potential profit for the buyer is also listed. This number is based off the difference in the buy now option and the current winning bid. Vehicles without a buy now option notify the buyer the information is not available.
+
 Inventory cards use skeleton placeholders while the JSON fetch is in flight, giving instant visual feedback on slow connections.
 
 The detail page adds full specs, condition narrative, BidPanel (minimum next bid, validation messages, success feedback), buy-now price (shown only when present in the dataset), and auction metadata consistent with the dataset. The document `<title>` is updated to the vehicle name while the detail page is mounted and restored on unmount. A breadcrumb links back to inventory. A skip-to-content link and focus styles support keyboard users. Unknown routes redirect to inventory.
@@ -97,6 +99,7 @@ The detail page adds full specs, condition narrative, BidPanel (minimum next bid
 - Live updates and auction end times / winner state.
 - Richer filters (price band, province, condition grade).
 - Image handling beyond placeholders.
+- More detailed profit value function (currency conversion, profit margin based off most recent sale price)
 
 ---
 
