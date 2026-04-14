@@ -6,7 +6,7 @@ Submission README for the OPENLANE coding challenge.
 
 ## How to Run
 
-**Development Build:**
+
 The buyer UI lives in [`web/`](web/). You need **Node.js 18+** (16+ may work; the stack uses Vite 4 and Vitest).
 
 1. Clone the repo and open a terminal at the repo root.
@@ -43,6 +43,8 @@ The buyer UI lives in [`web/`](web/). You need **Node.js 18+** (16+ may work; th
 
 2-3 hours on stretch goals: Optimization for web/mobile browser, optimal lighthouse score. Advanced vehicle filtering and bug fixes.
 
+Additional time was spent outside the scope of this project for improving real-time profit value options. (See Profit-Value-Tests branch)
+
 ---
 
 ## Assumptions and Scope
@@ -72,14 +74,16 @@ The buyer UI lives in [`web/`](web/). You need **Node.js 18+** (16+ may work; th
 - **Backend:** None (static JSON + client-side state).
 - **Database:** None (`localStorage` for overrides and watchlist).
 
-## LLMS
+## AI Tools Used
 - **IDE:** Cursor.
 - **LLMS** Planning stage - Cursor - Composer 2. Building stage - Cursor - Composer 2. Code review/optimization - Sonnet 4.6
 ---
 
 ## What I Built
 
-An auction buyer app with two main routes: inventory (`/`) and vehicle detail (`/vehicle/:id`). The inventory page loads vehicles from static JSON, shows a responsive grid of cards (thumbnail, title, location/lot, current bid, auction start time + countdown), and provides a debounced search across make, model, trim, VIN, lot, city, province, dealership, body style, and year. Users can sort by auction start (soonest), current bid (high to low), year (newest), or listing order, and toggle Saved only using per-card save actions.
+**Note** The build plan can be accessed from PLAN.md
+
+An auction buyer app with two main routes: inventory (`/`) and vehicle detail (`/vehicle/:id`). The inventory page loads vehicles from static JSON, shows a responsive grid of cards (thumbnail, title, location/lot, current bid, auction start time + countdown), and provides a debounced search across make, model, trim, VIN, lot, city, province, dealership, body style, and year. Users can sort by auction start (soonest), current bid (high to low or low to high), year (newest), or listing order, and toggle Saved only using per-card save actions.
 
 Inventory also exposes dropdown filters for Year, Make, and Model. The Make and Model filters are built dynamically from the loaded dataset via [`web/src/lib/inventoryFilters.ts`](web/src/lib/inventoryFilters.ts) (`buildVehicleFilterIndex`). The Model dropdown is disabled until a Make is selected and automatically clears if the chosen make no longer has the selected model. Results are loaded at 12 per page with a "Load more" button that shows the remaining count; any filter or sort change resets back to the first page.
 
@@ -89,11 +93,11 @@ Inventory cards use skeleton placeholders while the JSON fetch is in flight, giv
 
 The detail page adds full specs, condition narrative, BidPanel (minimum next bid, validation messages, success feedback), buy-now price (shown only when present in the dataset), and auction metadata consistent with the dataset. The document `<title>` is updated to the vehicle name while the detail page is mounted and restored on unmount. A breadcrumb links back to inventory. A skip-to-content link and focus styles support keyboard users. Unknown routes redirect to inventory.
 
-**Data files:** [`data/vehicles.json`](data/vehicles.json) is the original challenge dataset included at the repo root. [`web/public/vehicles.json`](web/public/vehicles.json) is the copy served to the app at runtime via `fetch("/vehicles.json")`; both files are identical.
-
 ---
 
 ## Notable Decisions
+
+Decisions were made to keep the prototype simple, predictable, and easy to test — avoiding unnecessary complexity while still addressing real performance considerations.
 
 - **Bid rules:** Minimum next bid is the starting bid when `bid_count === 0`; after bids exist, the next bid must beat the current high by $100 (`BID_INCREMENT` in [`web/src/lib/bid.ts`](web/src/lib/bid.ts)). This keeps the prototype predictable and easy to test.
 - **State model:** Catalog stays immutable in memory; `localStorage` stores only overrides for `current_bid` and `bid_count`, merged when rendering. Watchlist is a separate set of vehicle IDs.
@@ -105,7 +109,6 @@ The detail page adds full specs, condition narrative, BidPanel (minimum next bid
 - **Font preload plugin:** A custom Vite plugin (`fontPreloadPlugin` in `vite.config.ts`) injects `<link rel="preload">` tags for the DM Sans and Instrument Sans `.woff2` files into the built `index.html`. Without this, the browser only discovers the font URLs after parsing the extracted CSS bundle, adding an extra round-trip on the critical path. Only above-the-fold weights are preloaded; all other variants load normally.
 - **Shared Vite/Vitest config:** The `test` block lives inside `vite.config.ts` rather than a separate `vitest.config.ts`, so there is a single source of truth for both the dev/build pipeline and the unit test environment.
 - **Tooling:** Vitest for fast unit tests on search, bid, format, and filter logic; Playwright for a short smoke suite that boots the dev server via config.
-
 
 ---
 
@@ -131,6 +134,8 @@ The detail page adds full specs, condition narrative, BidPanel (minimum next bid
 - Richer filters (price band, province, condition grade).
 - Image handling beyond placeholders.
 - More detailed profit value function (currency conversion, profit margin based off most recent sale price)
+  - **Note** outside of the code challenge I began improving the profit value function. Its implementation can be found in the Profit-Value-Tests branch.
+- Integration of API's that give more information on vehicles (car reviews, known issues, etc.).
 
 ---
 
