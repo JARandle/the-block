@@ -29,6 +29,39 @@ export function formatDateTime(iso: string): string {
   }).format(d);
 }
 
+/**
+ * Calculates the estimated profit between the buy-now (retail) asking price
+ * and the current bid. A positive result means the vehicle can be acquired
+ * below retail; a negative result means the bid has exceeded retail.
+ *
+ * Returns `null` when the listing has no buy-now price set, since there is no
+ * retail reference point to compare against.
+ *
+ * @param buyNowPrice - The seller's retail asking price in CAD, or `null`.
+ * @param currentBid  - The current highest bid amount in CAD.
+ * @returns The estimated profit in CAD, or `null` if unavailable.
+ */
+export function calcProfit(buyNowPrice: number | null, currentBid: number): number | null {
+  if (buyNowPrice == null) return null;
+  return buyNowPrice - currentBid;
+}
+
+/**
+ * Calculates the profit as a percentage of the buy-now (retail) asking price,
+ * expressed as a value between -1 and 1 (e.g. `0.25` = 25% below retail).
+ *
+ * Returns `null` when no buy-now price is available or when the buy-now price
+ * is zero to avoid division by zero.
+ *
+ * @param buyNowPrice - The seller's retail asking price in CAD, or `null`.
+ * @param currentBid  - The current highest bid amount in CAD.
+ * @returns The profit margin as a fraction, or `null` if unavailable.
+ */
+export function calcProfitMargin(buyNowPrice: number | null, currentBid: number): number | null {
+  if (buyNowPrice == null || buyNowPrice === 0) return null;
+  return (buyNowPrice - currentBid) / buyNowPrice;
+}
+
 const MS_PER_MINUTE = 60_000;
 const MS_PER_HOUR = 3_600_000;
 const MS_PER_DAY = 86_400_000;

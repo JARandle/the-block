@@ -33,9 +33,6 @@ describe("formatDateTime", () => {
 });
 
 describe("auctionCountdownLabel", () => {
-  const iso = (offsetMs: number) =>
-    new Date(Date.now() + offsetMs).toISOString();
-
   it("returns 'Auction in progress' when diff is zero", () => {
     const now = new Date("2026-05-01T12:00:00Z");
     expect(auctionCountdownLabel("2026-05-01T12:00:00Z", now)).toBe(

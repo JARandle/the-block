@@ -1,9 +1,15 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { VehiclesProvider } from "./context/VehiclesContext";
 import { WatchlistProvider } from "./context/WatchlistContext";
 import { Header } from "./components/Header";
-import { InventoryPage } from "./pages/InventoryPage";
-import { VehicleDetailPage } from "./pages/VehicleDetailPage";
+
+const InventoryPage = lazy(() =>
+  import("./pages/InventoryPage").then((m) => ({ default: m.InventoryPage }))
+);
+const VehicleDetailPage = lazy(() =>
+  import("./pages/VehicleDetailPage").then((m) => ({ default: m.VehicleDetailPage }))
+);
 
 /**
  * Root application component. Sets up client-side routing via
@@ -32,11 +38,13 @@ export default function App() {
           <div className="min-h-screen bg-slate-950 text-slate-200">
             <Header />
             <main id="main-content">
-              <Routes>
-                <Route path="/" element={<InventoryPage />} />
-                <Route path="/vehicle/:id" element={<VehicleDetailPage />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
+              <Suspense>
+                <Routes>
+                  <Route path="/" element={<InventoryPage />} />
+                  <Route path="/vehicle/:id" element={<VehicleDetailPage />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Suspense>
             </main>
           </div>
         </WatchlistProvider>
