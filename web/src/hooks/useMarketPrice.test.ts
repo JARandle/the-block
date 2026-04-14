@@ -145,7 +145,7 @@ describe("useMarketPrice", () => {
   // -------------------------------------------------------------------------
 
   describe("successful fetch", () => {
-    beforeEach(() => vi.stubEnv("VITE_MARKETCHECK_API_KEY", "test-key"));
+    beforeEach(() => { vi.stubEnv("VITE_MARKETCHECK_API_KEY", "test-key"); });
 
     it("computes the mean price from a flat array response", async () => {
       fetchMock.mockResolvedValueOnce(
@@ -215,7 +215,7 @@ describe("useMarketPrice", () => {
   // -------------------------------------------------------------------------
 
   describe("price filtering", () => {
-    beforeEach(() => vi.stubEnv("VITE_MARKETCHECK_API_KEY", "test-key"));
+    beforeEach(() => { vi.stubEnv("VITE_MARKETCHECK_API_KEY", "test-key"); });
 
     it("ignores null prices and averages the rest", async () => {
       fetchMock.mockResolvedValueOnce(
@@ -327,7 +327,7 @@ describe("useMarketPrice", () => {
   // -------------------------------------------------------------------------
 
   describe("unrecognised response shapes", () => {
-    beforeEach(() => vi.stubEnv("VITE_MARKETCHECK_API_KEY", "test-key"));
+    beforeEach(() => { vi.stubEnv("VITE_MARKETCHECK_API_KEY", "test-key"); });
 
     it("treats an object without a 'listings' key as empty", async () => {
       fetchMock.mockResolvedValueOnce(
@@ -375,7 +375,7 @@ describe("useMarketPrice", () => {
   // -------------------------------------------------------------------------
 
   describe("error handling", () => {
-    beforeEach(() => vi.stubEnv("VITE_MARKETCHECK_API_KEY", "test-key"));
+    beforeEach(() => { vi.stubEnv("VITE_MARKETCHECK_API_KEY", "test-key"); });
 
     it("transitions to error on HTTP 404 and includes the status code", async () => {
       fetchMock.mockResolvedValueOnce(makeFetchResponse({}, 404));
@@ -435,7 +435,7 @@ describe("useMarketPrice", () => {
   // -------------------------------------------------------------------------
 
   describe("caching", () => {
-    beforeEach(() => vi.stubEnv("VITE_MARKETCHECK_API_KEY", "test-key"));
+    beforeEach(() => { vi.stubEnv("VITE_MARKETCHECK_API_KEY", "test-key"); });
 
     it("does not call fetch a second time for the same make/model/year", async () => {
       fetchMock.mockResolvedValue(makeFetchResponse([{ price: 20_000 }]));
